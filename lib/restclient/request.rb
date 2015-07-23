@@ -29,7 +29,8 @@ module RestClient
                 :payload, :user, :password, :timeout, :max_redirects,
                 :open_timeout, :raw_response, :verify_ssl, :ssl_client_cert,
                 :ssl_client_key, :ssl_ca_file, :processed_headers, :args,
-                :ssl_verify_callback, :ssl_verify_callback_warnings
+                :ssl_verify_callback, :ssl_verify_callback_warnings,
+                :before_execution_procs
 
     def self.execute(args, & block)
       new(args).execute(& block)
@@ -61,6 +62,7 @@ module RestClient
       @max_redirects = args[:max_redirects] || 10
       @processed_headers = make_headers headers
       @args = args
+      @before_execution_proc = args[:before_execution_proc]
     end
 
     def execute & block
@@ -199,6 +201,10 @@ module RestClient
 
       RestClient.before_execution_procs.each do |before_proc|
         before_proc.call(req, args)
+      end
+
+      if @before_execution_proc
+        @before_execution_proc.call(req, args)
       end
 
       log_request
